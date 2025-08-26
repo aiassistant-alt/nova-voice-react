@@ -1,0 +1,92 @@
+/**
+ * Nova Voice React - Theme Definitions
+ * Contains all theme-specific CSS variables
+ */
+
+/* White Theme */
+[data-theme="white"] {
+  --nm-bg-primary: #f0f0f3;
+  --nm-bg-secondary: #e8e8eb;
+  --nm-text-primary: #2e2e2e;
+  --nm-text-secondary: #6b6b6b;
+  --nm-light-highlight: rgba(255,255,255,0.9);
+  --nm-shadow-light: rgba(163,177,198,0.6);
+  --nm-shadow-raised: 12px 12px 20px #bebebe, -12px -12px 20px #ffffff;
+  --nm-shadow-pressed: inset 6px 6px 10px #bebebe, inset -6px -6px 10px #ffffff;
+  --nm-shadow-inset-light: inset 4px 4px 8px rgba(163,177,198,0.4), inset -4px -4px 8px rgba(255,255,255,0.8);
+  --nm-shadow-elevated: 20px 20px 40px #bebebe, -20px -20px 40px #ffffff;
+  --nm-shadow-raised-sm: 6px 6px 12px #bebebe, -6px -6px 12px #ffffff;
+  --nm-accent: #007bff;
+  --nm-detail-1: rgba(0,123,255,0.1);
+  --nm-detail-2: rgba(0,123,255,0.2);
+  --nm-detail-3: rgba(0,123,255,0.3);
+  --nm-detail-4: rgba(0,123,255,0.4);
+  --nm-detail-5: rgba(0,123,255,0.5);
+  --nm-border: rgba(163,177,198,0.3);
+}
+
+/* Black Theme */
+[data-theme="black"] {
+  --nm-bg-primary: #1a1a1a;
+  --nm-bg-secondary: #0f0f0f;
+  --nm-text-primary: #ffffff;
+  --nm-text-secondary: #b0b0b0;
+  --nm-light-highlight: rgba(60,60,60,0.5);
+  --nm-shadow-light: rgba(0,0,0,0.9);
+  --nm-shadow-raised: 8px 8px 16px #000000, -8px -8px 16px #2a2a2a;
+  --nm-shadow-pressed: inset 4px 4px 8px #000000, inset -4px -4px 8px #2a2a2a;
+  --nm-shadow-inset-light: inset 3px 3px 6px rgba(0,0,0,0.8), inset -3px -3px 6px rgba(60,60,60,0.3);
+  --nm-shadow-elevated: 15px 15px 30px #000000, -15px -15px 30px #2a2a2a;
+  --nm-shadow-raised-sm: 4px 4px 8px #000000, -4px -4px 8px #2a2a2a;
+  --nm-accent: #ff4081;
+  --nm-detail-1: rgba(255,64,129,0.1);
+  --nm-detail-2: rgba(255,64,129,0.2);
+  --nm-detail-3: rgba(255,64,129,0.3);
+  --nm-detail-4: rgba(255,64,129,0.4);
+  --nm-detail-5: rgba(255,64,129,0.5);
+  --nm-border: rgba(255,255,255,0.1);
+}
+
+/* Blue Theme */
+[data-theme="blue"] {
+  --nm-bg-primary: #001f3f;
+  --nm-bg-secondary: #001429;
+  --nm-text-primary: #ffffff;
+  --nm-text-secondary: #7fdbff;
+  --nm-light-highlight: rgba(127,219,255,0.2);
+  --nm-shadow-light: rgba(0,10,20,0.8);
+  --nm-shadow-raised: 10px 10px 20px #000a14, -10px -10px 20px #00345a;
+  --nm-shadow-pressed: inset 5px 5px 10px #000a14, inset -5px -5px 10px #00345a;
+  --nm-shadow-inset-light: inset 3px 3px 6px rgba(0,10,20,0.6), inset -3px -3px 6px rgba(127,219,255,0.1);
+  --nm-shadow-elevated: 18px 18px 36px #000a14, -18px -18px 36px #00345a;
+  --nm-shadow-raised-sm: 5px 5px 10px #000a14, -5px -5px 10px #00345a;
+  --nm-accent: #7fdbff;
+  --nm-detail-1: rgba(127,219,255,0.1);
+  --nm-detail-2: rgba(127,219,255,0.2);
+  --nm-detail-3: rgba(127,219,255,0.3);
+  --nm-detail-4: rgba(127,219,255,0.4);
+  --nm-detail-5: rgba(127,219,255,0.5);
+  --nm-border: rgba(127,219,255,0.2);
+}
+
+/* Purple Theme */
+[data-theme="purple"] {
+  --nm-bg-primary: #2e1a47;
+  --nm-bg-secondary: #1f0f33;
+  --nm-text-primary: #ffffff;
+  --nm-text-secondary: #e0b3ff;
+  --nm-light-highlight: rgba(224,179,255,0.2);
+  --nm-shadow-light: rgba(15,7,23,0.8);
+  --nm-shadow-raised: 10px 10px 20px #0f0717, -10px -10px 20px #4d2d77;
+  --nm-shadow-pressed: inset 5px 5px 10px #0f0717, inset -5px -5px 10px #4d2d77;
+  --nm-shadow-inset-light: inset 3px 3px 6px rgba(15,7,23,0.6), inset -3px -3px 6px rgba(224,179,255,0.1);
+  --nm-shadow-elevated: 18px 18px 36px #0f0717, -18px -18px 36px #4d2d77;
+  --nm-shadow-raised-sm: 5px 5px 10px #0f0717, -5px -5px 10px #4d2d77;
+  --nm-accent: #e0b3ff;
+  --nm-detail-1: rgba(224,179,255,0.1);
+  --nm-detail-2: rgba(224,179,255,0.2);
+  --nm-detail-3: rgba(224,179,255,0.3);
+  --nm-detail-4: rgba(224,179,255,0.4);
+  --nm-detail-5: rgba(224,179,255,0.5);
+  --nm-border: rgba(224,179,255,0.2);
+}

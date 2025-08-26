@@ -1,0 +1,176 @@
+/**
+ * Nova Voice React - Component Styles
+ * Neumorphic component styling
+ */
+
+/* Base neumorphic classes */
+.nm-shadow-raised {
+  box-shadow: var(--nm-shadow-raised);
+}
+
+.nm-shadow-pressed {
+  box-shadow: var(--nm-shadow-pressed);
+}
+
+.nm-shadow-inset-light {
+  box-shadow: var(--nm-shadow-inset-light);
+}
+
+.nm-shadow-elevated {
+  box-shadow: var(--nm-shadow-elevated);
+}
+
+.nm-shadow-raised-sm {
+  box-shadow: var(--nm-shadow-raised-sm);
+}
+
+/* Hamburger menu button */
+.m_button {
+  width: 40px;
+  height: 40px;
+  background: var(--nm-bg-primary);
+  border-radius: 8px;
+  box-shadow: var(--nm-shadow-raised);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.m_button span {
+  width: 20px;
+  height: 2px;
+  background: var(--nm-text-primary);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.m_button:hover {
+  box-shadow: var(--nm-shadow-inset-light);
+  transform: scale(0.95);
+}
+
+/* Spiral gradient */
+.spiral-gradient {
+  background: conic-gradient(
+    from 0deg,
+    #ff0080,
+    #ff8c00,
+    #ffd700,
+    #00ff00,
+    #00ffff,
+    #0080ff,
+    #8000ff,
+    #ff0080
+  );
+}
+
+/* Radio badge styles */
+.radio-badge {
+  background: var(--nm-bg-primary);
+  box-shadow: var(--nm-shadow-raised);
+  border-radius: 25px;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  transition: all 0.3s ease;
+  min-width: 180px;
+  justify-content: center;
+}
+
+.radio-badge.speaking {
+  box-shadow: var(--nm-shadow-elevated);
+  transform: scale(1.02);
+}
+
+.radio-waves {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 25px;
+}
+
+.wave {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--nm-accent);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.radio-badge.speaking .wave {
+  animation: radioWave 2s ease-out infinite;
+}
+
+.radio-badge.speaking .wave-1 {
+  width: 40px;
+  height: 40px;
+  animation-delay: 0s;
+}
+
+.radio-badge.speaking .wave-2 {
+  width: 40px;
+  height: 40px;
+  animation-delay: 0.5s;
+}
+
+.radio-badge.speaking .wave-3 {
+  width: 40px;
+  height: 40px;
+  animation-delay: 1s;
+}
+
+.radio-indicator {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--nm-accent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.radio-badge.speaking .radio-indicator {
+  opacity: 1;
+  animation: pulse 2s infinite;
+}
+
+/* Lesson badge */
+.lesson-badge {
+  background: var(--nm-bg-primary);
+  box-shadow: var(--nm-shadow-raised);
+  border-radius: 25px;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 180px;
+  justify-content: center;
+}
+
+/* Controls frame */
+.controls-frame {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  height: 80px;
+  width: 240px;
+  position: relative;
+  box-shadow: var(--nm-shadow-raised);
+  border-radius: 10px;
+  background: var(--nm-bg-primary);
+  transition: box-shadow 0.6s cubic-bezier(.79,.21,.06,.81);
+}
