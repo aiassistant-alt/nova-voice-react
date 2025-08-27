@@ -69,43 +69,52 @@ const QuizSidebar = ({ active, toggleQuiz }) => {
 
   return (
     <div className={`quiz-sidebar ${active ? 'active' : ''}`}>
-      {/* Quiz Header */}
-      <div className="quiz-header" 
+      {/* Quiz Header - Matching Main Sidebar */}
+      <div className="sidebar-header" 
            style={{
+             background: 'var(--nm-bg-secondary)',
+             borderBottom: '1px solid var(--nm-detail-3)',
+             color: 'var(--nm-text-primary)',
+             padding: '10px 15px',
+             margin: '10px 15px 5px 15px',
+             borderRadius: '8px',
+             boxShadow: 'var(--nm-shadow-raised)',
              display: 'flex',
-             justifyContent: 'space-between',
              alignItems: 'center',
-             marginBottom: '20px',
-             paddingBottom: '15px',
-             borderBottom: '2px solid rgba(163, 177, 198, 0.2)'
+             justifyContent: 'space-between',
+             height: '45px'
            }}>
         <h3 className="quiz-title" 
             style={{
               color: 'var(--nm-text-secondary)',
-              fontSize: '20px',
-              fontWeight: '600'
+              fontSize: '16px',
+              fontWeight: '600',
+              margin: 0,
+              display: 'flex',
+              alignItems: 'center'
             }}>
           <i className="fas fa-clipboard-question" 
-             style={{ marginRight: '10px', color: 'var(--nm-accent)' }}></i>
-          Quiz - Módulo 1 Lección 1
+             style={{ marginRight: '8px', color: 'var(--nm-accent)', fontSize: '14px' }}></i>
+          <span>Quiz</span>
         </h3>
         <button 
           onClick={toggleQuiz}
-          className="quiz-close-btn"
+          className="sidebar-close-btn"
           style={{
             background: 'var(--nm-bg-primary)',
-            border: 'none',
-            width: '40px',
-            height: '40px',
-            borderRadius: '50%',
+            border: '1px solid var(--nm-detail-3)',
+            width: '28px',
+            height: '28px',
+            borderRadius: '8px',
             boxShadow: 'var(--nm-shadow-raised-sm)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: 'var(--nm-text-primary)',
-            fontSize: '18px',
-            transition: 'all 0.3s ease'
+            fontSize: '12px',
+            transition: 'all 0.3s ease',
+            flexShrink: 0
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.boxShadow = 'var(--nm-shadow-inset-light)'
@@ -118,16 +127,24 @@ const QuizSidebar = ({ active, toggleQuiz }) => {
         </button>
       </div>
       
-      {/* Quiz Content */}
-      <div className="quiz-content" style={{ flex: 1, overflowY: 'auto' }}>
+      {/* Quiz Content - Matching Main Sidebar */}
+      <div className="sidebar-content" style={{ 
+        padding: '10px',
+        margin: '0 15px 15px 15px',
+        borderRadius: '8px',
+        background: 'var(--nm-bg-primary)',
+        boxShadow: 'inset 3px 3px 6px rgba(163, 177, 198, 0.3), inset -3px -3px 6px var(--nm-light-highlight, rgba(228, 233, 240, 0.5))',
+        flex: 1,
+        overflowY: 'auto'
+      }}>
         <div className="question-card">
           <div>
             <div className="question-number"
                  style={{
                    color: '#ffffff',
-                   fontSize: '14px',
+                   fontSize: '12px',
                    fontWeight: '600',
-                   marginBottom: '10px',
+                   marginBottom: '8px',
                    opacity: '0.9'
                  }}>
               Pregunta {currentQuestion + 1} de {questions.length}
@@ -135,10 +152,10 @@ const QuizSidebar = ({ active, toggleQuiz }) => {
             <div className="question-text"
                  style={{
                    color: '#ffffff',
-                   fontSize: '16px',
+                   fontSize: '14px',
                    fontWeight: '500',
-                   marginBottom: '15px',
-                   lineHeight: '1.5'
+                   marginBottom: '12px',
+                   lineHeight: '1.4'
                  }}>
               {question.question}
             </div>
@@ -165,10 +182,10 @@ const QuizSidebar = ({ active, toggleQuiz }) => {
                       : document.body.getAttribute('data-theme') === 'white'
                         ? '1px solid rgba(0, 0, 0, 0.2)'
                         : '1px solid rgba(255, 255, 255, 0.3)',
-                    borderRadius: '8px',
+                    borderRadius: '6px',
                     boxShadow: 'inset 2px 2px 4px rgba(255, 255, 255, 0.1), inset -2px -2px 4px rgba(0, 0, 0, 0.2)',
-                    padding: '12px 15px',
-                    marginBottom: '10px',
+                    padding: '8px 10px',
+                    marginBottom: '6px',
                     color: document.body.getAttribute('data-theme') === 'white' ? '#212529' : '#ffffff',
                     fontSize: '14px',
                     cursor: 'pointer',

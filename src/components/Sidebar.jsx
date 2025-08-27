@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 /**
  * Sidebar Component
@@ -81,12 +82,7 @@ const Sidebar = ({ active, toggleSidebar, currentModule, setCurrentModule, setCu
     <div className={`sidebar ${active ? 'active' : ''}`}>
       {/* Sidebar Header */}
       <div className="sidebar-header">
-        <div className="sidebar-title">
-          <i className="fas fa-book-open"></i>
-          <span>Lecciones</span>
-        </div>
-        
-        <div className="header-module-dropdown" style={{ flex: 1, margin: '0 15px', position: 'relative' }}>
+        <div className="header-module-dropdown" style={{ flex: 1, position: 'relative' }}>
           <button 
             onClick={() => setDropdownOpen(!dropdownOpen)}
             className="header-dropdown-toggle"
@@ -165,7 +161,7 @@ const Sidebar = ({ active, toggleSidebar, currentModule, setCurrentModule, setCu
         
         <button 
           onClick={toggleSidebar}
-          className="sidebar-close-btn"
+          className="sidebar-close-btn nm-badge"
           style={{
             background: 'transparent',
             border: '1px solid rgba(255,255,255,0.3)',
@@ -209,10 +205,9 @@ const Sidebar = ({ active, toggleSidebar, currentModule, setCurrentModule, setCu
               <div style={{ 
                 display: 'flex', 
                 alignItems: 'center', 
-                justifyContent: 'space-between', 
-                marginBottom: '10px' 
+                justifyContent: 'space-between'
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <i className={`fas ${lesson.unlocked ? 'fa-play-circle' : 'fa-lock'}`} 
                      style={{ 
                        color: selectedLesson === lesson.number 
@@ -220,7 +215,7 @@ const Sidebar = ({ active, toggleSidebar, currentModule, setCurrentModule, setCu
                          : lesson.unlocked 
                            ? 'var(--nm-accent)' 
                            : 'var(--nm-text-secondary)',
-                       fontSize: '18px'
+                       fontSize: '16px'
                      }}></i>
                   <span style={{ fontWeight: '500', fontSize: '14px' }}>{lesson.title}</span>
                 </div>
@@ -234,25 +229,6 @@ const Sidebar = ({ active, toggleSidebar, currentModule, setCurrentModule, setCu
                   </span>
                 )}
               </div>
-              
-              {lesson.unlocked && (
-                <div className="lesson-progress" 
-                     style={{ 
-                       display: 'flex', 
-                       alignItems: 'center', 
-                       gap: '10px'
-                     }}>
-                  <div className="lesson-progress-bar">
-                    <div className={`lesson-progress-fill ${getProgressClass(lesson.progress)}`}
-                         style={{
-                           width: `${lesson.progress}%`
-                         }} />
-                  </div>
-                  <span className="lesson-progress-text">
-                    {lesson.progress}%
-                  </span>
-                </div>
-              )}
             </div>
           ))}
         </div>
@@ -264,53 +240,122 @@ const Sidebar = ({ active, toggleSidebar, currentModule, setCurrentModule, setCu
         bottom: '0',
         left: '0',
         right: '0',
-        padding: '20px',
-        borderTop: '1px solid var(--nm-border)',
+        padding: '15px',
+        borderTop: '1px solid var(--nm-detail-3)',
         background: 'var(--nm-bg-secondary)'
       }}>
-        <button
-          onClick={handleThemeChange}
-          className="theme-cycle-btn"
-          style={{
-            width: '100%',
-            padding: '12px',
-            borderRadius: '12px',
-            background: 'var(--nm-bg-primary)',
-            boxShadow: 'var(--nm-shadow-raised)',
-            border: 'none',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '10px',
-            color: 'var(--nm-text-primary)',
-            fontSize: '14px',
-            fontWeight: '500',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            position: 'relative',
-            overflow: 'hidden'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.boxShadow = 'var(--nm-shadow-inset-light)'
-            e.currentTarget.style.transform = 'scale(0.98)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.boxShadow = 'var(--nm-shadow-raised)'
-            e.currentTarget.style.transform = 'scale(1)'
-          }}
-          onMouseDown={(e) => {
-            e.currentTarget.style.boxShadow = 'var(--nm-shadow-pressed)'
-            e.currentTarget.style.transform = 'scale(0.95)'
-          }}
-          onMouseUp={(e) => {
-            e.currentTarget.style.boxShadow = 'var(--nm-shadow-inset-light)'
-            e.currentTarget.style.transform = 'scale(0.98)'
-          }}
-        >
-          <span style={{ fontSize: '20px' }}>{themeIcons[theme]}</span>
-          <span style={{ textTransform: 'capitalize' }}>Tema: {theme}</span>
-          <i className="fas fa-chevron-right" style={{ fontSize: '12px', opacity: '0.6' }}></i>
-        </button>
+        {/* All Buttons in One Row */}
+        <div style={{
+          display: 'flex',
+          gap: '8px',
+          alignItems: 'stretch'
+        }}>
+          <button
+            onClick={() => window.location.href = '/library'}
+            className="nav-button"
+            style={{
+              flex: 1,
+              padding: '10px',
+              borderRadius: '10px',
+              background: 'var(--nm-bg-primary)',
+              boxShadow: 'var(--nm-shadow-raised)',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '5px',
+              color: 'var(--nm-text-primary)',
+              fontSize: '11px',
+              fontWeight: '500',
+              transition: 'all 0.3s ease',
+              minHeight: '60px'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = 'var(--nm-shadow-inset-light)'
+              e.currentTarget.style.transform = 'scale(0.98)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = 'var(--nm-shadow-raised)'
+              e.currentTarget.style.transform = 'scale(1)'
+            }}
+          >
+            <i className="fas fa-book" style={{ fontSize: '16px' }}></i>
+            <span>Library</span>
+          </button>
+          
+          <button
+            onClick={() => console.log('Navigate to Profile')}
+            className="nav-button"
+            style={{
+              flex: 1,
+              padding: '10px',
+              borderRadius: '10px',
+              background: 'var(--nm-bg-primary)',
+              boxShadow: 'var(--nm-shadow-raised)',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '5px',
+              color: 'var(--nm-text-primary)',
+              fontSize: '11px',
+              fontWeight: '500',
+              transition: 'all 0.3s ease',
+              minHeight: '60px'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = 'var(--nm-shadow-inset-light)'
+              e.currentTarget.style.transform = 'scale(0.98)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = 'var(--nm-shadow-raised)'
+              e.currentTarget.style.transform = 'scale(1)'
+            }}
+          >
+            <i className="fas fa-user" style={{ fontSize: '16px' }}></i>
+            <span>Profile</span>
+          </button>
+          
+          {/* Theme Button */}
+          <button
+            onClick={handleThemeChange}
+            className="theme-cycle-btn"
+            style={{
+              flex: 1,
+              padding: '10px',
+              borderRadius: '10px',
+              background: 'var(--nm-bg-primary)',
+              boxShadow: 'var(--nm-shadow-raised)',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '5px',
+              color: 'var(--nm-text-primary)',
+              fontSize: '11px',
+              fontWeight: '500',
+              transition: 'all 0.3s ease',
+              minHeight: '60px'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = 'var(--nm-shadow-inset-light)'
+              e.currentTarget.style.transform = 'scale(0.98)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = 'var(--nm-shadow-raised)'
+              e.currentTarget.style.transform = 'scale(1)'
+            }}
+          >
+            <span style={{ fontSize: '12px' }}>{themeIcons[theme]}</span>
+            <span>Theme</span>
+          </button>
+        </div>
       </div>
     </div>
   )

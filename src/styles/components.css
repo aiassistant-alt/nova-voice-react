@@ -85,8 +85,8 @@
 }
 
 .radio-badge.speaking {
-  box-shadow: var(--nm-shadow-elevated);
-  transform: scale(1.02);
+  box-shadow: var(--nm-shadow-raised);
+  transform: scale(1);
 }
 
 .radio-waves {

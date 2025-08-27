@@ -1,9 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import VoiceAssistant from './components/VoiceAssistant'
 import Sidebar from './components/Sidebar'
 import QuizSidebar from './components/QuizSidebar'
 import Controls from './components/Controls'
 import Header from './components/Header'
+import Library from './components/Library'
+import LoginPage from './components/LoginPage'
+import useAuth from './hooks/useAuth'
 
 /**
  * Main App Component
@@ -11,8 +15,14 @@ import Header from './components/Header'
  * Features multi-theme support, interactive lessons, and AI quiz system
  */
 function App() {
-  // Theme state
-  const [theme, setTheme] = useState('purple')
+  // Authentication state
+  const { isAuthenticated, isLoading, user } = useAuth()
+  
+  // Theme state - Load from localStorage or default to purple
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem('novavoice-theme')
+    return savedTheme || 'purple'
+  })
   const [autoTheme, setAutoTheme] = useState(false) // Disabled for manual theme cycling
   
   // UI state
@@ -27,12 +37,17 @@ function App() {
   const [currentLesson, setCurrentLesson] = useState(null)
   const [currentModule, setCurrentModule] = useState(1)
   
+  // Estados de audio Nova Sonic - CRÍTICOS PARA FUNCIONAMIENTO
+  const [isListening, setIsListening] = useState(false)
+  const [isNovaPlaying, setIsNovaPlaying] = useState(false)
+  
   // Theme configuration
   const themes = ['white', 'black', 'blue', 'purple']
   const themeIndexRef = useRef(3) // Start with purple
 
   useEffect(() => {
     document.body.setAttribute('data-theme', theme)
+    localStorage.setItem('novavoice-theme', theme)
   }, [theme])
 
 
@@ -49,15 +64,16 @@ function App() {
     }
   }
 
-  return (
+  const MainLayout = () => (
     <div className="flex flex-col items-center justify-center h-screen relative"
          style={{ background: 'var(--nm-bg-primary)' }}>
       {/* Header Controls */}
       <Header 
         toggleSidebar={toggleSidebar}
         currentLesson={currentLesson}
-        isPlaying={isPlaying}
         sidebarActive={sidebarActive}
+        isListening={isListening}
+        isPlaying={isNovaPlaying}
       />
       
       {/* Left Sidebar */}
@@ -84,53 +100,25 @@ function App() {
         style={{
           position: 'fixed',
           top: '20px',
-          right: quizActive ? '420px' : '20px',
-          background: 'var(--nm-bg-primary)',
-          border: 'none',
-          padding: '12px 20px',
-          borderRadius: '12px',
-          boxShadow: 'var(--nm-shadow-raised)',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'var(--nm-text-primary)',
-          fontSize: '16px',
-          fontWeight: '600',
-          transition: 'all 0.3s ease',
+          right: quizActive ? '320px' : '20px',
           zIndex: '102',
-          gap: '8px'
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.boxShadow = 'var(--nm-shadow-inset-light)'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.boxShadow = 'var(--nm-shadow-raised)'
-        }}
-        onMouseDown={(e) => {
-          e.currentTarget.style.boxShadow = 'inset -4px -4px 10px var(--nm-light-highlight), inset 4px 4px 10px rgba(163,177,198,0.4)'
-          e.currentTarget.style.transform = 'scale(0.98)'
-        }}
-        onMouseUp={(e) => {
-          e.currentTarget.style.boxShadow = 'var(--nm-shadow-raised)'
-          e.currentTarget.style.transform = 'scale(1)'
+          transition: 'all 0.3s ease'
         }}
       >
         <i className="fas fa-brain"></i>
-        AI Quiz
+        <span>AI Quiz</span>
       </button>
       
       {/* Central Voice Assistant */}
-      <VoiceAssistant isPlaying={isPlaying} togglePlay={togglePlay} />
+      <VoiceAssistant 
+        isPlaying={isPlaying} 
+        togglePlay={togglePlay}
+        onListeningChange={setIsListening}
+        onNovaPlayingChange={setIsNovaPlaying}
+      />
       
       {/* Bottom Controls */}
-      <div style={{
-        position: 'fixed',
-        bottom: '30px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: '600'
-      }}>
+      <div className="fixed bottom-[30px] left-1/2 transform -translate-x-1/2 z-[600]">
         <Controls 
           isPlaying={isPlaying}
           togglePlay={togglePlay}
@@ -139,6 +127,59 @@ function App() {
         />
       </div>
     </div>
+  )
+
+  // Loading screen mientras verificamos autenticación
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Verificando autenticación...</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <Router>
+      <Routes>
+        {/* Ruta de login */}
+        <Route 
+          path="/login" 
+          element={
+            isAuthenticated ? <Navigate to="/voice" replace /> : <LoginPage />
+          } 
+        />
+        
+        {/* Rutas protegidas */}
+        <Route 
+          path="/voice" 
+          element={
+            isAuthenticated ? <MainLayout /> : <Navigate to="/login" replace />
+          } 
+        />
+        
+        <Route 
+          path="/library" 
+          element={
+            isAuthenticated ? 
+              <Library theme={theme} setTheme={setTheme} /> : 
+              <Navigate to="/login" replace />
+          } 
+        />
+        
+        {/* Redirección por defecto */}
+        <Route 
+          path="/" 
+          element={
+            isAuthenticated ? 
+              <Navigate to="/voice" replace /> : 
+              <Navigate to="/login" replace />
+          } 
+        />
+      </Routes>
+    </Router>
   )
 }
 
