@@ -11,7 +11,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "deploy": "npm run build && aws s3 sync dist/ s3://nova-voice-frontend-1756259461 --delete && aws cloudfront create-invalidation --distribution-id E1G16A72A2NBFH --paths '/*'"
+    "deploy": "npm run build && aws s3 sync build/ s3://nova-voice-frontend-1756259461 --delete && aws cloudfront create-invalidation --distribution-id E1G16A72A2NBFH --paths '/*'"
   },
   "dependencies": {
     "@aws-amplify/auth": "^6.15.0",

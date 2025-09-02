@@ -1,18 +1,19 @@
 /**
- * Nova Voice React - Main Stylesheet
+ * Nova Voice React - Main Stylesheet  
  * v1.0.0
  * Neumorphic design system with multi-theme support
  */
 
+/* Import modular stylesheets FIRST */
 @import '@fortawesome/fontawesome-free/css/all.css';
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Import modular stylesheets */
 @import './styles/themes.css';
 @import './styles/animations.css';
 @import './styles/components.css';
+
+/* Tailwind directives AFTER imports */
+@tailwind base;
+@tailwind components;  
+@tailwind utilities;
 
 /* ================================
    📱 RESPONSIVE DESIGN SYSTEM
