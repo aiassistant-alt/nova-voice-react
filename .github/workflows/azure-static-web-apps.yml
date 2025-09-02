@@ -43,6 +43,8 @@ jobs:
         env:
           # Variables de entorno para el build
           NODE_ENV: production
+          # Inyectar API key para Vite en build time
+          VITE_AZURE_OPENAI_API_KEY: ${{ secrets.VITE_AZURE_OPENAI_API_KEY }}
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
