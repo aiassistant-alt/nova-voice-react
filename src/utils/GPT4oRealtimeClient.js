@@ -18,10 +18,10 @@ class GPT4oRealtimeClient {
     this.ephemeralKey = null
     
     // ✅ CONFIGURACIÓN AZURE OPENAI - eastus2 region (CORREGIDA)
-    this.SESSIONS_URL = "https://aiass-mezvze9t-eastus2.openai.azure.com/openai/realtimeapi/sessions?api-version=2025-04-01-preview"
+    this.SESSIONS_URL = "https://aiass-mezvze9t-eastus2.cognitiveservices.azure.com/openai/realtimeapi/sessions?api-version=2025-04-01-preview"
     this.WEBRTC_URL = "https://eastus2.realtimeapi-preview.ai.azure.com/v1/realtimertc"
     this.API_KEY = import.meta.env.VITE_AZURE_OPENAI_API_KEY || "YOUR_API_KEY_HERE"
-    this.DEPLOYMENT = "gpt-4o-realtime-preview"
+    this.DEPLOYMENT = "gpt-4o-realtime-preview" // Cambiar por tu deployment real si es diferente
     this.VOICE = "verse" // Recomendado por Azure para Realtime
     this.keepAliveInterval = null
     
