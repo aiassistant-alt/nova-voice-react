@@ -17,8 +17,8 @@ class GPT4oRealtimeClient {
     this.sessionId = null
     this.ephemeralKey = null
     
-    // ✅ CONFIGURACIÓN AZURE OPENAI - eastus2 region
-    this.SESSIONS_URL = "https://aiass-mezvze9t-eastus2.cognitiveservices.azure.com/openai/realtimeapi/sessions?api-version=2025-04-01-preview"
+    // ✅ CONFIGURACIÓN AZURE OPENAI - eastus2 region (CORREGIDA)
+    this.SESSIONS_URL = "https://aiass-mezvze9t-eastus2.cognitiveservices.azure.com/openai/realtimeapi/sessions?api-version=2024-10-01-preview"
     this.WEBRTC_URL = "https://eastus2.realtimeapi-preview.ai.azure.com/v1/realtimertc"
     this.API_KEY = import.meta.env.VITE_AZURE_OPENAI_API_KEY || "YOUR_API_KEY_HERE"
     this.DEPLOYMENT = "gpt-4o-realtime-preview"
@@ -41,6 +41,8 @@ class GPT4oRealtimeClient {
   async getEphemeralKey() {
     try {
       console.log('🔑 [GPT4oRealtimeClient] Requesting ephemeral key...')
+      console.log('🔧 [GPT4oRealtimeClient] Using API key:', this.API_KEY ? `${this.API_KEY.substring(0, 10)}...` : 'NOT_FOUND')
+      console.log('🔧 [GPT4oRealtimeClient] Sessions URL:', this.SESSIONS_URL)
       
       const response = await fetch(this.SESSIONS_URL, {
         method: "POST",
