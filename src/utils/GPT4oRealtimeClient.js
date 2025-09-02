@@ -22,7 +22,8 @@ class GPT4oRealtimeClient {
     this.WEBRTC_URL = "https://eastus2.realtimeapi-preview.ai.azure.com/v1/realtimertc"
     this.API_KEY = import.meta.env.VITE_AZURE_OPENAI_API_KEY || "YOUR_API_KEY_HERE"
     this.DEPLOYMENT = "gpt-4o-realtime-preview"
-    this.VOICE = "alloy" // Opciones: alloy, echo, fable, onyx, nova, shimmer
+    this.VOICE = "verse" // Recomendado por Azure para Realtime
+    this.keepAliveInterval = null
     
     // Callbacks para eventos
     this.onConnected = null
@@ -161,6 +162,14 @@ class GPT4oRealtimeClient {
       console.log('📡 [GPT4oRealtimeClient] Data channel open')
       this.updateSession()
       this.onSessionReady?.()
+      // Enviar saludo inicial para comprobar flujo de respuesta
+      this.createResponse()
+      // Mantener viva la sesión con pings periódicos (algunos entornos cierran el DC por inactividad)
+      this.keepAliveInterval = setInterval(() => {
+        if (this.dataChannel && this.dataChannel.readyState === 'open') {
+          try { this.dataChannel.send(JSON.stringify({ type: 'ping', timestamp: Date.now() })) } catch {}
+        }
+      }, 15000)
     })
 
     this.dataChannel.addEventListener('message', (event) => {
@@ -211,6 +220,10 @@ class GPT4oRealtimeClient {
     this.dataChannel.addEventListener('close', () => {
       console.log('📡 [GPT4oRealtimeClient] Data channel closed')
       this.isConnected = false
+      if (this.keepAliveInterval) {
+        clearInterval(this.keepAliveInterval)
+        this.keepAliveInterval = null
+      }
       this.onDisconnected?.('Data channel closed')
     })
   }
@@ -235,10 +248,12 @@ class GPT4oRealtimeClient {
           type: "server_vad",
           threshold: 0.5,
           prefix_padding_ms: 300,
-          silence_duration_ms: 1000
+          silence_duration_ms: 800,
+          create_response: true,
+          interrupt_response: true
         },
         temperature: 0.7,
-        max_response_output_tokens: 150
+        max_response_output_tokens: 400
       }
     }
     
