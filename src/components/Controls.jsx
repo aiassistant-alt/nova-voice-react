@@ -30,7 +30,7 @@ const Controls = ({ isPlaying, togglePlay, isMuted, toggleMute }) => {
           transitionTimingFunction: 'cubic-bezier(.79,.21,.06,.81)'
         }}
         onMouseDown={(e) => {
-          e.currentTarget.style.boxShadow = 'inset -4px -4px 6px 0 rgba(255,255,255,.5), inset 4px 4px 6px 0 rgba(116,125,136,.3)'
+          e.currentTarget.style.boxShadow = 'var(--nm-shadow-pressed)'
         }}
         onMouseUp={(e) => {
           e.currentTarget.style.boxShadow = 'var(--nm-shadow-raised)'
@@ -50,7 +50,7 @@ const Controls = ({ isPlaying, togglePlay, isMuted, toggleMute }) => {
         }}
         onMouseDown={(e) => {
           if (isPlaying) {
-            e.currentTarget.style.boxShadow = 'inset -4px -4px 6px 0 rgba(255,255,255,.5), inset 4px 4px 6px 0 rgba(116,125,136,.3)'
+            e.currentTarget.style.boxShadow = 'var(--nm-shadow-pressed)'
           }
         }}
         onMouseUp={(e) => {
@@ -69,7 +69,7 @@ const Controls = ({ isPlaying, togglePlay, isMuted, toggleMute }) => {
           transitionTimingFunction: 'cubic-bezier(.79,.21,.06,.81)'
         }}
         onMouseDown={(e) => {
-          e.currentTarget.style.boxShadow = 'inset -4px -4px 6px 0 rgba(255,255,255,.5), inset 4px 4px 6px 0 rgba(116,125,136,.3)'
+          e.currentTarget.style.boxShadow = 'var(--nm-shadow-pressed)'
         }}
         onMouseUp={(e) => {
           e.currentTarget.style.boxShadow = 'var(--nm-shadow-raised)'

@@ -133,7 +133,7 @@ const QuizSidebar = ({ active, toggleQuiz }) => {
         margin: '0 15px 15px 15px',
         borderRadius: '8px',
         background: 'var(--nm-bg-primary)',
-        boxShadow: 'inset 3px 3px 6px rgba(163, 177, 198, 0.3), inset -3px -3px 6px var(--nm-light-highlight, rgba(228, 233, 240, 0.5))',
+        boxShadow: 'inset 3px 3px 6px rgba(163, 177, 198, 0.3)',
         flex: 1,
         overflowY: 'auto'
       }}>

@@ -41,59 +41,171 @@ const VoiceAssistant = ({
     }
   }
   return (
-    <div className="frame absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[500]">
-      {/* Frame exterior neumórfico */}
-      <div className="frame-before relative w-[calc(15vw+40px)] h-[calc(15vw+40px)] rounded-full bg-[var(--nm-bg-primary)] nm-shadow-elevated flex items-center justify-center">
-        {/* Trigger button interior - Nova Sonic audio integrado */}
-        <div 
-          onClick={handleVoiceClick}
-          className="trigger trigger-before relative w-[15vw] h-[15vw] rounded-full bg-[var(--nm-bg-primary)] nm-shadow-pressed cursor-pointer overflow-hidden flex items-center justify-center text-black/70 tracking-wider z-[501] transition-all duration-300 hover:scale-[0.98] active:scale-95"
-        >
-          
-          {/* Gradiente cónico animado - Nova Sonic integrado */}
-          <div 
-            className={`spiral absolute top-[15%] left-[15%] w-[70%] h-[70%] rounded-full spiral-gradient blur-[15px] opacity-90 z-[1] ${(isPlaying || isListening || isActive) ? 'animate-rotate-gradient' : ''}`}
-          />
-          
-          {/* Debug error (invisible - solo consola) */}
-          {error && console.error('🎤 Nova Audio Error:', error)}
-        </div>
-        
-        {/* Ondas de expansión cuando está reproduciendo O escuchando - CENTRADAS */}
-        {(isPlaying || isListening || isActive) && (
-          <div className="dots pointer-events-none">
+    <div className="voice-main-wrapper">
+      {/* PATRÓN INTELLILEARN EXACTO: Tamaños fijos + flex centering */}
+      <div className="nm-voice-circle-wrapper">
+        <div className="nm-voice-circle" onClick={handleVoiceClick}>
+          <div className="nm-voice-inner-circle">
+            {/* PATRÓN INTELLILEARN EXACTO: Iridescent center */}
             <div 
-              className="dot absolute top-1/2 left-1/2 w-[calc(15vw+20px)] h-[calc(15vw+20px)] rounded-full opacity-100 -z-[3]"
-              style={{
-                transform: 'translate(-50%, -50%)',
-                background: 'var(--nm-bg-primary)',
-                boxShadow: '4px 4px 12px rgba(163,177,198,0.4), -4px -4px 12px var(--nm-light-highlight), inset 2px 2px 4px rgba(163,177,198,0.2), inset -2px -2px 4px rgba(255,255,255,0.3)',
-                animation: 'wave 2s ease-in-out infinite'
-              }}
+              className={`nm-voice-iridescent ${(isPlaying || isListening || isActive) ? 'active' : ''}`}
             />
-            <div 
-              className="dot absolute top-1/2 left-1/2 w-[calc(15vw+35px)] h-[calc(15vw+35px)] rounded-full opacity-100 -z-[1]"
-              style={{
-                transform: 'translate(-50%, -50%)',
-                background: 'var(--nm-bg-primary)',
-                boxShadow: '6px 6px 16px rgba(163,177,198,0.3), -6px -6px 16px var(--nm-light-highlight), inset 3px 3px 6px rgba(163,177,198,0.15), inset -3px -3px 6px rgba(255,255,255,0.25)',
-                animation: 'wave 2s ease-in-out infinite',
-                animationDelay: '0.5s'
-              }}
-            />
-            <div 
-              className="dot absolute top-1/2 left-1/2 w-[calc(15vw+50px)] h-[calc(15vw+50px)] rounded-full opacity-100 -z-[2]"
-              style={{
-                transform: 'translate(-50%, -50%)',
-                background: 'var(--nm-bg-primary)',
-                boxShadow: '8px 8px 20px rgba(163,177,198,0.25), -8px -8px 20px var(--nm-light-highlight), inset 4px 4px 8px rgba(163,177,198,0.1), inset -4px -4px 8px rgba(255,255,255,0.2)',
-                animation: 'wave 2s ease-in-out infinite',
-                animationDelay: '1s'
-              }}
-            />
+            
+            {/* Debug error (invisible - solo consola) */}
+            {error && console.error('🎤 Nova Audio Error:', error)}
           </div>
-        )}
+          
+          {/* PATRÓN INTELLILEARN EXACTO: Voice waves */}
+          {(isPlaying || isListening || isActive) && (
+            <>
+              <div className="nm-voice-wave nm-voice-wave-1" />
+              <div className="nm-voice-wave nm-voice-wave-2" />
+              <div className="nm-voice-wave nm-voice-wave-3" />
+              <div className="nm-voice-wave nm-voice-wave-4" />
+            </>
+          )}
+        </div>
       </div>
+      
+      {/* ESTILOS INTELLILEARN EXACTOS */}
+      <style jsx>{`
+        /* PATRÓN INTELLILEARN EXACTO: Main wrapper */
+        .voice-main-wrapper {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 30px;
+          z-index: 500;
+        }
+        
+        /* PATRÓN INTELLILEARN EXACTO: Circle wrapper */
+        .nm-voice-circle-wrapper {
+          position: relative;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+        
+        /* PATRÓN INTELLILEARN EXACTO: Main circle - SIN SOMBRA BLANCA */
+        .nm-voice-circle {
+          position: relative;
+          width: 280px;
+          height: 280px;
+          border-radius: 50%;
+          background: var(--nm-bg-primary);
+          box-shadow: var(--nm-shadow-elevated);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.3s ease;
+        }
+        
+        .nm-voice-circle:hover {
+          box-shadow: var(--nm-shadow-elevated);
+          transform: scale(1.02);
+        }
+        
+        /* PATRÓN INTELLILEARN EXACTO: Inner circle - SIN SOMBRA BLANCA */
+        .nm-voice-inner-circle {
+          position: relative;
+          width: 220px;
+          height: 220px;
+          border-radius: 50%;
+          background: var(--nm-bg-primary);
+          box-shadow: var(--nm-shadow-inset-light);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+        }
+        
+        /* PATRÓN INTELLILEARN EXACTO: Iridescent center - COLORES INTENSOS SIN AMARILLO */
+        .nm-voice-iridescent {
+          position: absolute;
+          width: 140px;
+          height: 140px;
+          border-radius: 50%;
+          background: conic-gradient(
+            from 0deg at 50% 50%,
+            #FF007F 0deg,
+            #FF00FF 60deg,
+            #8B00FF 120deg,
+            #0080FF 180deg,
+            #00D4FF 240deg,
+            #00FF94 300deg,
+            #FF007F 360deg
+          );
+          filter: blur(12px);
+          opacity: 0.4;
+          animation: rotate-iridescent 4s linear infinite;
+          z-index: 1;
+        }
+        
+        .nm-voice-iridescent.active {
+          opacity: 0.65;
+          filter: blur(8px);
+          animation: rotate-iridescent 2s linear infinite;
+        }
+        
+        /* PATRÓN INTELLILEARN EXACTO: Voice waves - TAMAÑOS FIJOS */
+        .nm-voice-wave {
+          position: absolute;
+          border: 2px solid;
+          border-radius: 50%;
+          opacity: 0;
+          animation: voice-wave-animation 2s ease-out infinite;
+          pointer-events: none;
+        }
+        
+        .nm-voice-wave-1 {
+          width: 300px;
+          height: 300px;
+          border-color: var(--nm-detail-3);
+          animation-delay: 0s;
+        }
+        
+        .nm-voice-wave-2 {
+          width: 340px;
+          height: 340px;
+          border-color: var(--nm-detail-2);
+          animation-delay: 0.5s;
+        }
+        
+        .nm-voice-wave-3 {
+          width: 380px;
+          height: 380px;
+          border-color: var(--nm-detail-1);
+          animation-delay: 1s;
+        }
+        
+        .nm-voice-wave-4 {
+          width: 420px;
+          height: 420px;
+          border-color: var(--nm-border);
+          animation-delay: 1.5s;
+        }
+        
+        /* ANIMACIONES INTELLILEARN EXACTAS */
+        @keyframes rotate-iridescent {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes voice-wave-animation {
+          0% {
+            transform: scale(0.8);
+            opacity: 1;
+          }
+          100% {
+            transform: scale(1.5);
+            opacity: 0;
+          }
+        }
+      `}</style>
     </div>
   )
 }

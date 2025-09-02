@@ -54,17 +54,16 @@
   transform: scale(0.95);
 }
 
-/* Spiral gradient */
+/* Spiral gradient - SIN AMARILLO */
 .spiral-gradient {
   background: conic-gradient(
     from 0deg,
     #ff0080,
-    #ff8c00,
-    #ffd700,
-    #00ff00,
-    #00ffff,
-    #0080ff,
+    #ff00ff,
     #8000ff,
+    #0080ff,
+    #00ffff,
+    #00ff94,
     #ff0080
   );
 }

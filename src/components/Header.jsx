@@ -25,8 +25,17 @@ const Header = ({ toggleSidebar, currentLesson, isPlaying, sidebarActive, isList
         </div>
       )}
 
-      {/* Top Header Badge - Only Speaking Indicator */}
-      <div className="badges-container fixed top-[15px] left-1/2 transform -translate-x-1/2 flex items-center z-[999] pointer-events-none">
+      {/* Top Header Badge - CENTRADO PERFECTO CON CÍRCULO */}
+      <div 
+        className="badges-container fixed top-[15px] flex items-center justify-center z-[999] pointer-events-none"
+        style={{ 
+          left: '50%', 
+          transform: 'translateX(-50%)', 
+          width: 'auto',
+          margin: 0, 
+          padding: 0 
+        }}
+      >
         {/* Radio Badge - HABLANDO/ESCUCHANDO */}
         <div className={`radio-badge pointer-events-auto ${isPlaying || isListening ? 'speaking' : ''}`}>
           {/* Radio Waves Animation */}
