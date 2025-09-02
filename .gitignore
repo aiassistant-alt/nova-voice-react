@@ -15,6 +15,9 @@ build/
 .env.test.local
 .env.production.local
 
+# Azure OpenAI credentials
+.env.azure
+
 # IDE and editor files
 .vscode/
 .idea/

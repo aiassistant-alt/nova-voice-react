@@ -1,0 +1,334 @@
+/**
+ * ^GPT4oRealtimeClient
+ * Author: Luis Arturo Parra - Telmo AI
+ * Created: 2025-01-09
+ * Usage: Cliente WebRTC para GPT-4o Realtime API Azure OpenAI
+ * Business Context: Conecta el círculo neumórfico con GPT-4o en tiempo real
+ * Relations: useNovaAudio.js, VoiceAssistant.jsx
+ * Reminders: Usa ephemeral keys y WebRTC peer connection
+ */
+
+class GPT4oRealtimeClient {
+  constructor() {
+    this.peerConnection = null
+    this.dataChannel = null
+    this.audioElement = null
+    this.isConnected = false
+    this.sessionId = null
+    this.ephemeralKey = null
+    
+    // ✅ CONFIGURACIÓN AZURE OPENAI - eastus2 region
+    this.SESSIONS_URL = "https://aiass-mezvze9t-eastus2.cognitiveservices.azure.com/openai/realtimeapi/sessions?api-version=2025-04-01-preview"
+    this.WEBRTC_URL = "https://eastus2.realtimeapi-preview.ai.azure.com/v1/realtimertc"
+    this.API_KEY = import.meta.env.VITE_AZURE_OPENAI_API_KEY || "YOUR_API_KEY_HERE"
+    this.DEPLOYMENT = "gpt-4o-realtime-preview"
+    this.VOICE = "alloy" // Opciones: alloy, echo, fable, onyx, nova, shimmer
+    
+    // Callbacks para eventos
+    this.onConnected = null
+    this.onDisconnected = null
+    this.onError = null
+    this.onAudioReceived = null
+    this.onTextReceived = null
+    this.onSessionReady = null
+    
+    console.log('🚀 [GPT4oRealtimeClient] Initialized for Azure OpenAI eastus2')
+  }
+
+  /**
+   * Obtener ephemeral key de Azure OpenAI
+   */
+  async getEphemeralKey() {
+    try {
+      console.log('🔑 [GPT4oRealtimeClient] Requesting ephemeral key...')
+      
+      const response = await fetch(this.SESSIONS_URL, {
+        method: "POST",
+        headers: {
+          "api-key": this.API_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: this.DEPLOYMENT,
+          voice: this.VOICE
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Ephemeral key request failed: ${response.status}`)
+      }
+
+      const data = await response.json()
+      this.sessionId = data.id
+      this.ephemeralKey = data.client_secret?.value
+      
+      console.log('✅ [GPT4oRealtimeClient] Ephemeral key received, session:', this.sessionId)
+      return this.ephemeralKey
+      
+    } catch (error) {
+      console.error('❌ [GPT4oRealtimeClient] Ephemeral key error:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Inicializar conexión WebRTC con GPT-4o
+   */
+  async connect() {
+    try {
+      console.log('🔌 [GPT4oRealtimeClient] Starting WebRTC connection...')
+      
+      // 1. Obtener ephemeral key
+      await this.getEphemeralKey()
+      
+      // 2. Crear peer connection
+      this.peerConnection = new RTCPeerConnection()
+      
+      // 3. Configurar audio element para reproducción
+      this.audioElement = document.createElement('audio')
+      this.audioElement.autoplay = true
+      this.audioElement.style.display = 'none'
+      document.body.appendChild(this.audioElement)
+      
+      // 4. Manejar audio remoto del modelo
+      this.peerConnection.ontrack = (event) => {
+        console.log('🔊 [GPT4oRealtimeClient] Received audio track from GPT-4o')
+        this.audioElement.srcObject = event.streams[0]
+        this.onAudioReceived?.(event.streams[0])
+      }
+      
+      // 5. Obtener micrófono del usuario
+      const userMedia = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 24000
+        }
+      })
+      
+      // 6. Agregar audio track del usuario
+      const audioTrack = userMedia.getAudioTracks()[0]
+      this.peerConnection.addTrack(audioTrack, userMedia)
+      
+      // 7. Crear data channel para eventos
+      this.dataChannel = this.peerConnection.createDataChannel('realtime-channel')
+      this.setupDataChannel()
+      
+      // 8. Crear offer SDP
+      const offer = await this.peerConnection.createOffer()
+      await this.peerConnection.setLocalDescription(offer)
+      
+      // 9. Enviar offer a Azure OpenAI WebRTC endpoint
+      const sdpResponse = await fetch(`${this.WEBRTC_URL}?model=${this.DEPLOYMENT}`, {
+        method: "POST",
+        body: offer.sdp,
+        headers: {
+          Authorization: `Bearer ${this.ephemeralKey}`,
+          "Content-Type": "application/sdp",
+        },
+      })
+      
+      if (!sdpResponse.ok) {
+        throw new Error(`WebRTC connection failed: ${sdpResponse.status}`)
+      }
+      
+      // 10. Configurar answer SDP
+      const answerSdp = await sdpResponse.text()
+      const answer = { type: "answer", sdp: answerSdp }
+      await this.peerConnection.setRemoteDescription(answer)
+      
+      this.isConnected = true
+      console.log('✅ [GPT4oRealtimeClient] WebRTC connection established')
+      this.onConnected?.(this.sessionId)
+      
+      return true
+      
+    } catch (error) {
+      console.error('❌ [GPT4oRealtimeClient] Connection failed:', error)
+      this.onError?.(error)
+      throw error
+    }
+  }
+
+  /**
+   * Configurar data channel para eventos del modelo
+   */
+  setupDataChannel() {
+    this.dataChannel.addEventListener('open', () => {
+      console.log('📡 [GPT4oRealtimeClient] Data channel open')
+      this.updateSession()
+      this.onSessionReady?.()
+    })
+
+    this.dataChannel.addEventListener('message', (event) => {
+      try {
+        const realtimeEvent = JSON.parse(event.data)
+        console.log('📥 [GPT4oRealtimeClient] Received event:', realtimeEvent.type)
+        
+        switch (realtimeEvent.type) {
+          case "session.created":
+            console.log('✅ [GPT4oRealtimeClient] Session created successfully')
+            break
+            
+          case "session.updated":
+            console.log('✅ [GPT4oRealtimeClient] Session updated')
+            break
+            
+          case "conversation.item.created":
+            console.log('💬 [GPT4oRealtimeClient] Conversation item created')
+            break
+            
+          case "response.audio.delta":
+            // Audio chunks are handled via WebRTC track, not data channel
+            console.log('🔊 [GPT4oRealtimeClient] Audio delta received')
+            break
+            
+          case "response.text.delta":
+            console.log('💬 [GPT4oRealtimeClient] Text delta:', realtimeEvent.delta)
+            this.onTextReceived?.(realtimeEvent.delta)
+            break
+            
+          case "response.done":
+            console.log('🏁 [GPT4oRealtimeClient] Response completed')
+            break
+            
+          case "error":
+            console.error('❌ [GPT4oRealtimeClient] Model error:', realtimeEvent.error)
+            this.onError?.(realtimeEvent.error)
+            break
+            
+          default:
+            console.log('📋 [GPT4oRealtimeClient] Unknown event:', realtimeEvent.type)
+        }
+      } catch (error) {
+        console.error('❌ [GPT4oRealtimeClient] Event parsing error:', error)
+      }
+    })
+
+    this.dataChannel.addEventListener('close', () => {
+      console.log('📡 [GPT4oRealtimeClient] Data channel closed')
+      this.isConnected = false
+      this.onDisconnected?.('Data channel closed')
+    })
+  }
+
+  /**
+   * Actualizar configuración de sesión
+   */
+  updateSession() {
+    if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
+      console.warn('⚠️ [GPT4oRealtimeClient] Data channel not ready for session update')
+      return
+    }
+    
+    const event = {
+      type: "session.update",
+      session: {
+        instructions: "Eres Nova, un asistente de voz inteligente y amigable. Responde de manera natural y conversacional en español. Mantén tus respuestas concisas pero informativas. Tienes una personalidad cálida y servicial.",
+        voice: this.VOICE,
+        input_audio_format: "pcm16",
+        output_audio_format: "pcm16",
+        turn_detection: {
+          type: "server_vad",
+          threshold: 0.5,
+          prefix_padding_ms: 300,
+          silence_duration_ms: 1000
+        },
+        temperature: 0.7,
+        max_response_output_tokens: 150
+      }
+    }
+    
+    this.dataChannel.send(JSON.stringify(event))
+    console.log('📤 [GPT4oRealtimeClient] Session updated with Nova personality')
+  }
+
+  /**
+   * Enviar evento de respuesta manual (para iniciar conversación)
+   */
+  createResponse() {
+    if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
+      console.warn('⚠️ [GPT4oRealtimeClient] Data channel not ready for response creation')
+      return
+    }
+    
+    const event = {
+      type: "response.create",
+      response: {
+        modalities: ["audio"],
+        instructions: "Saluda al usuario de manera amigable y pregunta cómo puedes ayudarle hoy."
+      }
+    }
+    
+    this.dataChannel.send(JSON.stringify(event))
+    console.log('📤 [GPT4oRealtimeClient] Response creation requested')
+  }
+
+  /**
+   * Desconectar de GPT-4o Realtime API
+   */
+  disconnect() {
+    try {
+      console.log('🔌 [GPT4oRealtimeClient] Disconnecting...')
+      
+      if (this.dataChannel) {
+        this.dataChannel.close()
+        this.dataChannel = null
+      }
+      
+      if (this.peerConnection) {
+        this.peerConnection.close()
+        this.peerConnection = null
+      }
+      
+      if (this.audioElement) {
+        this.audioElement.remove()
+        this.audioElement = null
+      }
+      
+      this.isConnected = false
+      this.sessionId = null
+      this.ephemeralKey = null
+      
+      console.log('✅ [GPT4oRealtimeClient] Disconnected successfully')
+      
+    } catch (error) {
+      console.error('❌ [GPT4oRealtimeClient] Disconnect error:', error)
+    }
+  }
+
+  /**
+   * Configurar callbacks para eventos
+   */
+  setCallbacks({
+    onConnected,
+    onDisconnected, 
+    onError,
+    onAudioReceived,
+    onTextReceived,
+    onSessionReady
+  }) {
+    this.onConnected = onConnected
+    this.onDisconnected = onDisconnected
+    this.onError = onError
+    this.onAudioReceived = onAudioReceived
+    this.onTextReceived = onTextReceived
+    this.onSessionReady = onSessionReady
+  }
+
+  /**
+   * Obtener estado de conexión
+   */
+  getConnectionStatus() {
+    return {
+      isConnected: this.isConnected,
+      sessionId: this.sessionId,
+      hasEphemeralKey: !!this.ephemeralKey,
+      dataChannelState: this.dataChannel?.readyState || 'none',
+      peerConnectionState: this.peerConnection?.connectionState || 'none'
+    }
+  }
+}
+
+export default GPT4oRealtimeClient

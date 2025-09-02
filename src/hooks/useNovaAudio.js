@@ -9,148 +9,56 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import NovaSocketClient from '../utils/NovaSocketClient'
-import { SonicPCMPlayerAdvanced } from '../utils/SonicPCMPlayerAdvanced'
-import { base64ToFloat32Array } from '../utils/PCM16AudioPlayer'
+import GPT4oRealtimeClient from '../utils/GPT4oRealtimeClient'
 
 const useNovaAudio = () => {
-  // 🚀 MODO OFFLINE - Sin backend hasta que esté disponible
-  const OFFLINE_MODE = true
+  // 🚀 GPT-4o REALTIME API - Conectado con Azure OpenAI
+  const GPT4O_MODE = true
   
   // Estados principales
-  const [isConnected, setIsConnected] = useState(OFFLINE_MODE ? false : false)
+  const [isConnected, setIsConnected] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [error, setError] = useState(null)
-  const [connectionStatus, setConnectionStatus] = useState(OFFLINE_MODE ? 'offline' : 'disconnected')
+  const [connectionStatus, setConnectionStatus] = useState('disconnected')
 
   // Estados de conversación
   const [currentResponse, setCurrentResponse] = useState(null)
   const [conversationActive, setConversationActive] = useState(false)
   const [turnNumber, setTurnNumber] = useState(0)
 
-  // Referencias - Patrón Intellilearn
-  const socketClient = useRef(null)
-  const audioPlayer = useRef(null)
-  
-  // Audio capture refs (Intellilearn pattern)
+  // Referencias - GPT-4o Realtime API
+  const gpt4oClient = useRef(null)
   const audioStreamRef = useRef(null)
-  const mediaRecorderRef = useRef(null)
-  
-  // PCM16 capture pipeline (AWS pattern)
-  const audioContextRef = useRef(null)
-  const sourceNodeRef = useRef(null)
-  const processorNodeRef = useRef(null)
-  const pendingSamplesRef = useRef(new Float32Array(0)) // acumulador a 16kHz
 
-  // Helpers PCM16/Resampler
-  const downsampleTo16k = useCallback((inputFloat32, inputSampleRate) => {
-    const targetRate = 16000
-    if (inputSampleRate === targetRate) return inputFloat32
 
-    const sampleRateRatio = inputSampleRate / targetRate
-    const newLength = Math.floor(inputFloat32.length / sampleRateRatio)
-    const result = new Float32Array(newLength)
-
-    let offsetResult = 0
-    let offsetBuffer = 0
-    while (offsetResult < result.length) {
-      const nextOffsetBuffer = Math.round((offsetResult + 1) * sampleRateRatio)
-      // Average to cheap anti-alias instead of naive pick
-      let accum = 0
-      let count = 0
-      for (let i = Math.round(offsetBuffer); i < nextOffsetBuffer && i < inputFloat32.length; i++) {
-        accum += inputFloat32[i]
-        count++
-      }
-      result[offsetResult] = count > 0 ? (accum / count) : 0
-      offsetResult++
-      offsetBuffer = nextOffsetBuffer
-    }
-    return result
-  }, [])
-
-  const encodePCM16 = useCallback((float32Array) => {
-    const buffer = new ArrayBuffer(float32Array.length * 2)
-    const view = new DataView(buffer)
-    let offset = 0
-    for (let i = 0; i < float32Array.length; i++, offset += 2) {
-      let s = Math.max(-1, Math.min(1, float32Array[i]))
-      view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true)
-    }
-    return new Uint8Array(buffer)
-  }, [])
-
-  const uint8ToBase64 = useCallback((uint8Array) => {
-    let binary = ''
-    const chunkSize = 8192
-    for (let i = 0; i < uint8Array.length; i += chunkSize) {
-      const chunk = uint8Array.subarray(i, Math.min(i + chunkSize, uint8Array.length))
-      binary += String.fromCharCode.apply(null, Array.from(chunk))
-    }
-    return btoa(binary)
-  }, [])
 
   /**
-   * Inicializar componentes de audio y conexión
-   * Patrón EXACTO de Intellilearn Core que funciona con Nova Sonic
+   * Inicializar componentes de audio y conexión GPT-4o Realtime API
    */
   const initialize = useCallback(async () => {
     try {
-      console.log('🚀 [useNovaAudio] Initializing Nova Voice system (Intellilearn pattern)...')
+      console.log('🚀 [useNovaAudio] Initializing GPT-4o Realtime API system...')
 
-      if (OFFLINE_MODE) {
-        console.log('📱 [useNovaAudio] OFFLINE MODE - Inicializando solo interfaz visual...')
-        setConnectionStatus('offline')
-        setError(null)
-        console.log('✅ [useNovaAudio] Nova Voice system initialized (OFFLINE MODE)')
-        return true
-      }
-
-      // Crear SonicPCMPlayerAdvanced para Nova Sonic (AWS Pattern)
-      if (!audioPlayer.current) {
-        audioPlayer.current = new SonicPCMPlayerAdvanced()
+      // Crear cliente GPT-4o Realtime
+      if (!gpt4oClient.current) {
+        gpt4oClient.current = new GPT4oRealtimeClient()
         
-        // Configurar callbacks del reproductor (Advanced pattern)
-        audioPlayer.current.onStatus((status) => {
-          console.log('🔊 [SonicPCMPlayerAdvanced] Buffer status:', status)
-          if (!status.buffering && status.available === 0) {
-            // Audio playback completed
-            console.log('✅ [useNovaAudio] Audio playback completed (Advanced)')
-            setIsPlaying(false)
-            
-            // Mantener conversación activa para turnos continuos
-            if (conversationActive) {
-              console.log('🔄 [useNovaAudio] Ready for next turn...')
-            }
-          }
+        // Configurar callbacks
+        gpt4oClient.current.setCallbacks({
+          onConnected: handleGPT4oConnected,
+          onDisconnected: handleGPT4oDisconnected,
+          onError: handleGPT4oError,
+          onAudioReceived: handleGPT4oAudioReceived,
+          onTextReceived: handleGPT4oTextReceived,
+          onSessionReady: handleGPT4oSessionReady
         })
         
-        // Inicializar audio player avanzado
-        await audioPlayer.current.initialize()
+        console.log('✅ [useNovaAudio] GPT-4o client created')
       }
-
-      // Crear NovaSocketClient
-      if (!socketClient.current) {
-        socketClient.current = new NovaSocketClient()
-        
-        // Configurar callbacks NovaSocket
-        socketClient.current.setCallbacks({
-          onConnected: handleSocketConnected,
-          onDisconnected: handleSocketDisconnected,
-          onError: handleSocketError,
-          onAudioOutput: handleNovaAudioOutput,
-          onTextOutput: handleNovaTextOutput,
-          onContentEnd: handleContentEnd,
-          onSessionReady: handleSessionReady
-        })
-      }
-
-      // Conectar al backend Nova Sonic
-      await socketClient.current.connect()
       
-      console.log('✅ [useNovaAudio] Nova Voice system initialized')
+      console.log('✅ [useNovaAudio] GPT-4o Realtime API system initialized')
       return true
 
     } catch (error) {
@@ -158,303 +66,166 @@ const useNovaAudio = () => {
       setError(error.message)
       return false
     }
-  }, [OFFLINE_MODE])
+  }, [])
 
   /**
-   * Iniciar captura de audio - Patrón EXACTO Intellilearn que funciona
+   * Iniciar sesión de voz con GPT-4o Realtime API
    */
   const startVoiceSession = useCallback(async () => {
     try {
-      console.log('🎤 [useNovaAudio] Starting voice session (Intellilearn pattern)...')
+      console.log('🎤 [useNovaAudio] Starting GPT-4o voice session...')
       
       // Limpiar errores previos
       setError(null)
       setIsProcessing(false)
 
-      if (OFFLINE_MODE) {
-        console.log('📱 [useNovaAudio] OFFLINE MODE - Simulando sesión de voz...')
-        setIsRecording(true)
-        setConversationActive(true)
-        setTurnNumber(prev => prev + 1)
-        console.log('✅ [useNovaAudio] Voice session started (OFFLINE MODE)')
-        
-        // Simular procesamiento después de 3 segundos
-        setTimeout(() => {
-          if (OFFLINE_MODE) {
-            setIsRecording(false)
-            setIsProcessing(true)
-            console.log('⏳ [useNovaAudio] Processing... (OFFLINE MODE)')
-            
-            // Simular respuesta después de 2 segundos
-            setTimeout(() => {
-              setIsProcessing(false)
-              setIsPlaying(true)
-              console.log('🔊 [useNovaAudio] Playing response... (OFFLINE MODE)')
-              
-              // Simular fin de reproducción después de 3 segundos
-              setTimeout(() => {
-                setIsPlaying(false)
-                console.log('✅ [useNovaAudio] Audio completed (OFFLINE MODE)')
-              }, 3000)
-            }, 2000)
-          }
-        }, 3000)
-        
-        return
+      // Inicializar si no está hecho
+      if (!gpt4oClient.current) {
+        await initialize()
       }
 
-      // ✅ PATRÓN INTELLILEARN: Pedir micrófono INMEDIATAMENTE sin esperar WebSocket
-      console.log('🎤 Requesting microphone access (Intellilearn pattern)...')
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          sampleRate: 16000,
-          channelCount: 1
-        }
-      })
-
-      // ✅ INICIALIZAR WEBSOCKET EN PARALELO (no bloquear micrófono)
+      // Conectar a GPT-4o Realtime API via WebRTC
       if (!isConnected) {
-        initialize().catch(e => console.log('🔌 WebSocket inicializando en background:', e))
+        setIsProcessing(true)
+        setConnectionStatus('connecting')
+        console.log('🔌 [useNovaAudio] Connecting to GPT-4o Realtime API...')
+        
+        await gpt4oClient.current.connect()
+      } else {
+        // Si ya está conectado, crear respuesta inicial
+        console.log('🎯 [useNovaAudio] Already connected, creating initial response...')
+        gpt4oClient.current.createResponse()
       }
-
-      // ✅ INTENTAR WEBSOCKET SESSION (pero no fallar si no conecta)
-      try {
-        if (socketClient.current && isConnected) {
-          socketClient.current.startAudioSession()
-        }
-      } catch (e) {
-        console.log('⚠️ WebSocket no disponible, continuando solo con micrófono:', e)
-      }
-
-      audioStreamRef.current = stream
-
-      // ✅ AWS PATTERN: AudioContext + ScriptProcessorNode → PCM16 @16kHz
-      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)()
-      sourceNodeRef.current = audioContextRef.current.createMediaStreamSource(stream)
-      // Buffer size 4096 para baja latencia estable
-      processorNodeRef.current = audioContextRef.current.createScriptProcessor(4096, 1, 1)
-
-      processorNodeRef.current.onaudioprocess = (e) => {
-        try {
-          if (!conversationActive) return
-          const input = e.inputBuffer.getChannelData(0)
-          const down = downsampleTo16k(input, audioContextRef.current.sampleRate)
-
-          // Acumular hasta al menos 480 samples (30ms a 16k)
-          if (pendingSamplesRef.current.length === 0) {
-            pendingSamplesRef.current = down
-          } else {
-            const merged = new Float32Array(pendingSamplesRef.current.length + down.length)
-            merged.set(pendingSamplesRef.current, 0)
-            merged.set(down, pendingSamplesRef.current.length)
-            pendingSamplesRef.current = merged
-          }
-
-          const frameSize = 480 // 30ms @16k
-          while (pendingSamplesRef.current.length >= frameSize) {
-            const frame = pendingSamplesRef.current.slice(0, frameSize)
-            pendingSamplesRef.current = pendingSamplesRef.current.slice(frameSize)
-
-            const pcmBytes = encodePCM16(frame)
-            const base64Audio = uint8ToBase64(pcmBytes)
-            socketClient.current?.sendAudioChunk({
-              data: base64Audio,
-              format: 'PCM16',
-              sampleRate: 16000,
-              channels: 1,
-              size: pcmBytes.byteLength
-            })
-          }
-        } catch (err) {
-          console.error('❌ PCM16 processing error:', err)
-        }
-      }
-
-      sourceNodeRef.current.connect(processorNodeRef.current)
-      processorNodeRef.current.connect(audioContextRef.current.destination)
       
       setIsRecording(true)
       setConversationActive(true)
       setTurnNumber(prev => prev + 1)
-      console.log('✅ [useNovaAudio] Voice session started (Intellilearn pattern)')
+      console.log('✅ [useNovaAudio] GPT-4o voice session started')
 
     } catch (error) {
       console.error('❌ [useNovaAudio] Failed to start voice session:', error)
       setError(error.message)
+      setIsProcessing(false)
+      setConnectionStatus('error')
     }
-  }, [isConnected, initialize, conversationActive, OFFLINE_MODE])
+  }, [isConnected, initialize])
 
   /**
-   * Detener grabación - Patrón EXACTO Intellilearn
+   * Detener sesión de voz
    */
   const stopVoiceSession = useCallback(() => {
     try {
-      console.log('🛑 [useNovaAudio] Stopping voice session (Intellilearn pattern)...')
+      console.log('🛑 [useNovaAudio] Stopping GPT-4o voice session...')
       
-      if (OFFLINE_MODE) {
-        console.log('📱 [useNovaAudio] OFFLINE MODE - Deteniendo simulación...')
-        setIsRecording(false)
-        setConversationActive(false)
-        console.log('✅ [useNovaAudio] Voice session stopped (OFFLINE MODE)')
-        return
-      }
-      
-      // ✅ Stop ScriptProcessor chain
-      if (processorNodeRef.current) {
-        try { processorNodeRef.current.disconnect() } catch (e) { console.debug('[PCM16] processor disconnect error', e) }
-        processorNodeRef.current.onaudioprocess = null
-        processorNodeRef.current = null
-      }
-      if (sourceNodeRef.current) {
-        try { sourceNodeRef.current.disconnect() } catch (e) { console.debug('[PCM16] source disconnect error', e) }
-        sourceNodeRef.current = null
-      }
-      if (audioContextRef.current) {
-        try { audioContextRef.current.close() } catch (e) { console.debug('[PCM16] context close error', e) }
-        audioContextRef.current = null
-      }
-      pendingSamplesRef.current = new Float32Array(0)
-
-      // ✅ PATRÓN INTELLILEARN: Stop audio stream
-      if (audioStreamRef.current) {
-        console.log('🛑 Stopping audio stream...')
-        audioStreamRef.current.getTracks().forEach(track => track.stop())
-        audioStreamRef.current = null
-      }
-
-      // Enviar señal de fin de audio al WebSocket
-      if (socketClient.current) {
-        socketClient.current.endAudioInput()
-      }
-
       setIsRecording(false)
-      setIsProcessing(true)
-      console.log('⏳ [useNovaAudio] Processing with Nova Sonic...')
+      
+      // GPT-4o maneja automáticamente la detección de fin de voz
+      // No necesitamos hacer nada especial aquí
+      console.log('✅ [useNovaAudio] GPT-4o voice session stopped')
 
     } catch (error) {
       console.error('❌ [useNovaAudio] Failed to stop voice session:', error)
       setError(error.message)
     }
-  }, [OFFLINE_MODE])
-
-  // AudioManager ya no se usa - patrón Intellilearn maneja audio directamente
-
-  /**
-   * Handler: conexión establecida con backend
-   */
-  const handleSocketConnected = useCallback((sessionId) => {
-    console.log('✅ [useNovaAudio] Connected to Nova Sonic backend:', sessionId)
-    setIsConnected(true)
-    setConnectionStatus('connected')
-    try {
-      socketClient.current?.startAudioSession()
-    } catch (err) {
-      console.warn('⚠️ startAudioSession on connect failed:', err?.message || err)
-    }
   }, [])
 
   /**
-   * Handler: desconexión del backend  
+   * Handler: conexión establecida con GPT-4o
    */
-  const handleSocketDisconnected = useCallback((reason) => {
-    console.log('🔌 [useNovaAudio] Disconnected from backend:', reason)
+  const handleGPT4oConnected = useCallback((sessionId) => {
+    console.log('✅ [useNovaAudio] Connected to GPT-4o Realtime API:', sessionId)
+    setIsConnected(true)
+    setIsProcessing(false)
+    setConnectionStatus('connected')
+  }, [])
+
+  /**
+   * Handler: desconexión de GPT-4o
+   */
+  const handleGPT4oDisconnected = useCallback((reason) => {
+    console.log('🔌 [useNovaAudio] Disconnected from GPT-4o:', reason)
     setIsConnected(false)
     setConnectionStatus('disconnected')
     setIsRecording(false)
     setIsProcessing(false)
+    setIsPlaying(false)
   }, [])
 
   /**
-   * Handler: respuesta de audio de Nova Sonic
+   * Handler: audio recibido de GPT-4o
    */
-  const handleNovaAudioOutput = useCallback(async (data) => {
+  const handleGPT4oAudioReceived = useCallback((audioStream) => {
     try {
-      console.log('🔊 [useNovaAudio] Nova Sonic audio response received')
+      console.log('🔊 [useNovaAudio] GPT-4o audio stream received')
       setIsProcessing(false)
       setIsPlaying(true)
 
-      // ✅ REPRODUCCIÓN REAL - Patrón AWS oficial con SonicPCMPlayerAdvanced
-      await audioPlayer.current.playPCM16(data.content)     // Direct base64 → PCM16 playback
-
       setCurrentResponse({
         type: 'audio',
-        content: data.content,
+        content: 'GPT-4o audio stream',
         timestamp: Date.now()
       })
 
-      console.log('✅ [useNovaAudio] Audio started playing via PCM16AudioPlayer')
+      // Audio se reproduce automáticamente via WebRTC
+      console.log('✅ [useNovaAudio] Audio playing via WebRTC')
 
     } catch (error) {
-      console.error('❌ [useNovaAudio] Failed to play Nova audio:', error)
+      console.error('❌ [useNovaAudio] Failed to handle GPT-4o audio:', error)
       setError(error.message)
       setIsPlaying(false)
     }
   }, [])
 
   /**
-   * Handler: respuesta de texto de Nova Sonic
+   * Handler: texto recibido de GPT-4o
    */
-  const handleNovaTextOutput = useCallback((data) => {
-    console.log('💬 [useNovaAudio] Nova Sonic text response:', data.text)
+  const handleGPT4oTextReceived = useCallback((textDelta) => {
+    console.log('💬 [useNovaAudio] GPT-4o text delta:', textDelta)
     setCurrentResponse({
-      type: 'text',
-      content: data.text,
+      type: 'text', 
+      content: textDelta,
       timestamp: Date.now()
     })
   }, [])
 
   /**
-   * Handler: contenido completado
+   * Handler: sesión GPT-4o lista
    */
-  const handleContentEnd = useCallback(() => {
-    console.log('🏁 [useNovaAudio] Nova Sonic content ended')
-    setIsProcessing(false)
-    // Mantener streaming abierto para turnos continuos
-  }, [])
-
-  /**
-   * Handler: sesión lista
-   */
-  const handleSessionReady = useCallback((data) => {
-    console.log('✅ [useNovaAudio] Nova Sonic session ready:', data)
+  const handleGPT4oSessionReady = useCallback(() => {
+    console.log('✅ [useNovaAudio] GPT-4o session ready')
     setConnectionStatus('ready')
+    
+    // Crear respuesta inicial automáticamente
+    setTimeout(() => {
+      if (gpt4oClient.current && gpt4oClient.current.isConnected) {
+        gpt4oClient.current.createResponse()
+      }
+    }, 500)
   }, [])
 
-  // Audio errors ahora manejados en MediaRecorder.onerror directamente
-
   /**
-   * Handler: errores de socket
+   * Handler: errores de GPT-4o
    */
-  const handleSocketError = useCallback((error) => {
-    console.error('❌ [useNovaAudio] Socket error:', error)
-    setError(error.message)
+  const handleGPT4oError = useCallback((error) => {
+    console.error('❌ [useNovaAudio] GPT-4o error:', error)
+    setError(error.message || error)
+    setIsProcessing(false)
+    setConnectionStatus('error')
   }, [])
 
   /**
-   * Finalizar conversación completa - Patrón Intellilearn
+   * Finalizar conversación GPT-4o
    */
   const endConversation = useCallback(() => {
-    console.log('🔚 [useNovaAudio] Ending conversation (Intellilearn pattern)...')
+    console.log('🔚 [useNovaAudio] Ending GPT-4o conversation...')
     
-    // ✅ PATRÓN INTELLILEARN: Stop MediaRecorder y audio stream
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop()
-      mediaRecorderRef.current = null
+    if (gpt4oClient.current) {
+      gpt4oClient.current.disconnect()
     }
 
     if (audioStreamRef.current) {
       audioStreamRef.current.getTracks().forEach(track => track.stop())
       audioStreamRef.current = null
-    }
-
-    if (audioPlayer.current) {
-      audioPlayer.current.stop()
-    }
-
-    if (socketClient.current) {
-      socketClient.current.disconnect()
     }
 
     setConversationActive(false)
@@ -463,25 +234,20 @@ const useNovaAudio = () => {
     setIsPlaying(false)
     setTurnNumber(0)
     setCurrentResponse(null)
+    setIsConnected(false)
+    setConnectionStatus('disconnected')
   }, [])
 
   /**
-   * Limpiar recursos al desmontar - Patrón Intellilearn
+   * Limpiar recursos al desmontar
    */
   useEffect(() => {
     return () => {
-      // ✅ PATRÓN INTELLILEARN: Cleanup MediaRecorder y audio stream
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        mediaRecorderRef.current.stop()
-      }
       if (audioStreamRef.current) {
         audioStreamRef.current.getTracks().forEach(track => track.stop())
       }
-      if (audioPlayer.current) {
-        audioPlayer.current.cleanup()
-      }
-      if (socketClient.current) {
-        socketClient.current.disconnect()
+      if (gpt4oClient.current) {
+        gpt4oClient.current.disconnect()
       }
     }
   }, [])
@@ -496,7 +262,7 @@ const useNovaAudio = () => {
   // Estados derivados
   const isListening = isRecording
   const isActive = isRecording || isProcessing || isPlaying
-  const canRecord = OFFLINE_MODE ? (!isRecording && !isProcessing) : (isConnected && !isRecording && !isProcessing)
+  const canRecord = !isRecording && !isProcessing
 
   return {
     // Estados principales
@@ -521,14 +287,18 @@ const useNovaAudio = () => {
     endConversation,
     initialize,
     
-    // Información del sistema - Patrón Intellilearn
+    // Información del sistema - GPT-4o Realtime API
     getAudioStatus: () => ({
-      isRecording: mediaRecorderRef.current?.state === 'recording',
       hasAudioStream: !!audioStreamRef.current,
-      pattern: 'intellilearn'
+      pattern: 'gpt4o-realtime'
     }),
-    getAudioPlayerStatus: () => audioPlayer.current?.getStatus(),
-    getConnectionStatus: () => socketClient.current?.getConnectionStatus()
+    getConnectionStatus: () => gpt4oClient.current?.getConnectionStatus() || {
+      isConnected: false,
+      sessionId: null,
+      hasEphemeralKey: false,
+      dataChannelState: 'none',
+      peerConnectionState: 'none'
+    }
   }
 }
 
