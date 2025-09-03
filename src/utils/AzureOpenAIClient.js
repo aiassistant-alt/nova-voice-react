@@ -61,40 +61,66 @@ class AzureOpenAIClient {
   }
 
   /**
-   * Test de conectividad
+   * Test de conectividad con auto-detección de deployment
    */
   async testConnection() {
-    try {
-      const response = await fetch(this.CHAT_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'api-key': this.API_KEY
-        },
-        body: JSON.stringify({
-          messages: [
-            {
-              role: "user",
-              content: "Hi"
-            }
-          ],
-          max_tokens: 5,
-          temperature: 0.1,
-          stream: false
+    console.log('🔑 [AzureOpenAIClient] Testing connection...')
+
+    // Lista de deployments comunes a probar
+    const commonDeployments = [
+      "gpt-4o-audio-preview-2",
+      "gpt-4o-audio-preview", 
+      "gpt-4o-realtime-preview",
+      "gpt-4o",
+      "gpt-4",
+      "gpt-35-turbo"
+    ]
+
+    for (const deployment of commonDeployments) {
+      console.log(`🧪 [AzureOpenAIClient] Testing deployment: ${deployment}`)
+      
+      const testUrl = `https://${this.RESOURCE_NAME}/openai/deployments/${deployment}/chat/completions?api-version=${this.API_VERSION}`
+      
+      try {
+        const response = await fetch(testUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'api-key': this.API_KEY
+          },
+          body: JSON.stringify({
+            messages: [
+              {
+                role: "user",
+                content: "Hi"
+              }
+            ],
+            max_tokens: 5,
+            temperature: 0.1,
+            stream: false
+          })
         })
-      })
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        if (response.ok) {
+          const data = await response.json()
+          console.log(`✅ [AzureOpenAIClient] SUCCESS with deployment: ${deployment}`)
+          
+          // Actualizar configuración con el deployment que funciona
+          this.DEPLOYMENT = deployment
+          this.CHAT_URL = testUrl
+          
+          console.log('✅ [AzureOpenAIClient] Connection test successful:', data)
+          return true
+        } else {
+          console.log(`❌ [AzureOpenAIClient] Deployment ${deployment} failed: ${response.status}`)
+        }
+
+      } catch (error) {
+        console.log(`❌ [AzureOpenAIClient] Deployment ${deployment} error:`, error.message)
       }
-
-      console.log('✅ [AzureOpenAIClient] Connection test successful')
-      return true
-
-    } catch (error) {
-      console.error('❌ [AzureOpenAIClient] Connection test failed:', error)
-      throw error
     }
+
+    throw new Error('❌ No working deployment found. Please verify your Azure OpenAI deployments in the portal.')
   }
 
   /**
