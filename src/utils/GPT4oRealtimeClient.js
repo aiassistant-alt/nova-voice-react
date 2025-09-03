@@ -17,13 +17,13 @@ class GPT4oRealtimeClient {
     this.sessionId = null
     this.ephemeralKey = null
     
-    // ✅ CONFIGURACIÓN AZURE OPENAI - CONFIRMADA DESDE PORTAL
-    this.RESOURCE_NAME = "telmoaxureaccountopenai" // ✅ REAL desde Azure Portal
+    // ✅ CONFIGURACIÓN AZURE OPENAI - CORREGIDA DESDE AZURE_SETUP.md
+    this.RESOURCE_NAME = "aiass-mezvze9t-eastus2.cognitiveservices.azure.com" // ✅ CORREGIDO
     this.REGION = "eastus2"
-    this.SESSIONS_URL = `https://${this.RESOURCE_NAME}.openai.azure.com/openai/realtimeapi/sessions?api-version=2024-10-01-preview`
+    this.SESSIONS_URL = `https://${this.RESOURCE_NAME}/openai/realtimeapi/sessions?api-version=2024-10-01-preview`
     this.WEBRTC_URL = `https://${this.REGION}.realtimeapi-preview.ai.azure.com/v1/realtimertc`
     this.API_KEY = import.meta.env.VITE_AZURE_OPENAI_API_KEY || "YOUR_API_KEY_HERE"
-    this.DEPLOYMENT = "gpt-4o-audio-preview" // ✅ DEPLOYMENT REAL confirmado
+    this.DEPLOYMENT = "gpt-4o-realtime-preview" // ✅ CORREGIDO según AZURE_SETUP.md
     this.VOICE = "verse" // Recomendado por Azure para Realtime
     this.keepAliveInterval = null
     

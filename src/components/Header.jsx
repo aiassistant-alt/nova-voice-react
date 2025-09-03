@@ -51,10 +51,16 @@ const Header = ({ toggleSidebar, currentLesson, isPlaying, sidebarActive, isList
               className="fas fa-microphone"
               style={{ color: isListening ? '#ef4444' : (isPlaying ? '#22c55e' : 'var(--nm-accent)') }}
             />
+            {/* 🚀 TEST DEPLOYMENT ICON */}
+            <i 
+              className="fas fa-rocket"
+              style={{ color: '#3b82f6', fontSize: '0.8rem', marginLeft: '4px' }}
+              title="Deployment Test ✅"
+            />
             <span 
               className="text-[0.9rem] font-semibold text-[var(--nm-text-primary)] uppercase tracking-[0.5px]"
             >
-              {isListening ? 'ESCUCHANDO' : (isPlaying ? 'HABLANDO' : 'LISTO')}
+              {isListening ? 'ESCUCHANDO' : (isPlaying ? 'HABLANDO' : '🚀 LISTO v2.0')}
             </span>
           </div>
           
