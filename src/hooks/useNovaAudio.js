@@ -9,7 +9,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import GPT4oRealtimeClient from '../utils/GPT4oRealtimeClient'
+import AzureRealtimeClient from '../utils/AzureRealtimeClient'
 
 const useNovaAudio = () => {
   // 🚀 GPT-4o REALTIME API - Conectado con Azure OpenAI
@@ -43,7 +43,7 @@ const useNovaAudio = () => {
 
       // Crear cliente GPT-4o Realtime
       if (!gpt4oClient.current) {
-        gpt4oClient.current = new GPT4oRealtimeClient()
+        gpt4oClient.current = new AzureRealtimeClient()
         
         // Configurar callbacks
         gpt4oClient.current.setCallbacks({

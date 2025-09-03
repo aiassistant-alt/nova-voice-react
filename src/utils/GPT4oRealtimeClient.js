@@ -17,13 +17,13 @@ class GPT4oRealtimeClient {
     this.sessionId = null
     this.ephemeralKey = null
     
-    // ✅ CONFIGURACIÓN AZURE OPENAI - CORREGIDA CON DATOS REALES DE AZURE PORTAL
+    // ✅ CONFIGURACIÓN AZURE OPENAI - SEGÚN DOCUMENTACIÓN OFICIAL DE AZURE
     this.RESOURCE_NAME = "aiass-mf33a6qd-eastus2.cognitiveservices.azure.com" // ✅ REAL DESDE AZURE PORTAL
     this.REGION = "eastus2"
-    this.SESSIONS_URL = `https://${this.RESOURCE_NAME}/openai/realtimeapi/sessions?api-version=2024-10-01-preview`
-    this.WEBRTC_URL = `https://${this.REGION}.realtimeapi-preview.ai.azure.com/v1/realtimertc`
-    this.API_KEY = import.meta.env.VITE_AZURE_OPENAI_API_KEY || "YOUR_API_KEY_HERE"
     this.DEPLOYMENT = "gpt-4o-audio-preview-2" // ✅ DEPLOYMENT NAME REAL DESDE AZURE PORTAL
+    this.API_VERSION = "2024-10-01-preview"
+    this.REALTIME_URL = `https://${this.RESOURCE_NAME}/openai/deployments/${this.DEPLOYMENT}/realtime?api-version=${this.API_VERSION}`
+    this.API_KEY = import.meta.env.VITE_AZURE_OPENAI_API_KEY || "YOUR_API_KEY_HERE"
     this.VOICE = "verse" // Recomendado por Azure para Realtime
     this.keepAliveInterval = null
     
@@ -39,39 +39,46 @@ class GPT4oRealtimeClient {
   }
 
   /**
-   * Obtener ephemeral key de Azure OpenAI
+   * Conectar directamente a Azure OpenAI Realtime API
+   * Según documentación oficial de Azure
    */
-  async getEphemeralKey() {
+  async connectToAzureRealtime() {
     try {
-      console.log('🔑 [GPT4oRealtimeClient] Requesting ephemeral key...')
+      console.log('🔑 [GPT4oRealtimeClient] Connecting to Azure OpenAI Realtime API...')
       console.log('🔧 [GPT4oRealtimeClient] Using API key:', this.API_KEY ? `${this.API_KEY.substring(0, 10)}...` : 'NOT_FOUND')
-      console.log('🔧 [GPT4oRealtimeClient] Sessions URL:', this.SESSIONS_URL)
+      console.log('🔧 [GPT4oRealtimeClient] Realtime URL:', this.REALTIME_URL)
       
-      const response = await fetch(this.SESSIONS_URL, {
-        method: "POST",
+      // Para Azure OpenAI, usamos WebSocket directamente al endpoint realtime
+      const wsUrl = this.REALTIME_URL.replace('https://', 'wss://').replace('http://', 'ws://')
+      
+      this.websocket = new WebSocket(wsUrl, [], {
         headers: {
           "api-key": this.API_KEY,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: this.DEPLOYMENT,
-          voice: this.VOICE
-        })
+          "OpenAI-Beta": "realtime=v1"
+        }
       })
 
-      if (!response.ok) {
-        throw new Error(`Ephemeral key request failed: ${response.status}`)
-      }
+      return new Promise((resolve, reject) => {
+        this.websocket.onopen = () => {
+          console.log('✅ [GPT4oRealtimeClient] WebSocket connected to Azure OpenAI')
+          this.isConnected = true
+          this.setupWebSocketHandlers()
+          resolve(true)
+        }
 
-      const data = await response.json()
-      this.sessionId = data.id
-      this.ephemeralKey = data.client_secret?.value
-      
-      console.log('✅ [GPT4oRealtimeClient] Ephemeral key received, session:', this.sessionId)
-      return this.ephemeralKey
+        this.websocket.onerror = (error) => {
+          console.error('❌ [GPT4oRealtimeClient] WebSocket error:', error)
+          reject(error)
+        }
+
+        this.websocket.onclose = () => {
+          console.log('🔌 [GPT4oRealtimeClient] WebSocket closed')
+          this.isConnected = false
+        }
+      })
       
     } catch (error) {
-      console.error('❌ [GPT4oRealtimeClient] Ephemeral key error:', error)
+      console.error('❌ [GPT4oRealtimeClient] Connection error:', error)
       throw error
     }
   }
