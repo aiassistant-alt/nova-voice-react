@@ -9,7 +9,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import AzureRealtimeClient from '../utils/AzureRealtimeClient'
+import AzureOpenAIClient from '../utils/AzureOpenAIClient'
 
 const useNovaAudio = () => {
   // 🚀 GPT-4o REALTIME API - Conectado con Azure OpenAI
@@ -43,7 +43,7 @@ const useNovaAudio = () => {
 
       // Crear cliente GPT-4o Realtime
       if (!gpt4oClient.current) {
-        gpt4oClient.current = new AzureRealtimeClient()
+        gpt4oClient.current = new AzureOpenAIClient()
         
         // Configurar callbacks
         gpt4oClient.current.setCallbacks({
@@ -84,18 +84,19 @@ const useNovaAudio = () => {
         await initialize()
       }
 
-      // Conectar a GPT-4o Realtime API via WebRTC
+      // Conectar a Azure OpenAI API
       if (!isConnected) {
         setIsProcessing(true)
         setConnectionStatus('connecting')
-        console.log('🔌 [useNovaAudio] Connecting to GPT-4o Realtime API...')
+        console.log('🔌 [useNovaAudio] Connecting to Azure OpenAI...')
         
         await gpt4oClient.current.connect()
-      } else {
-        // Si ya está conectado, crear respuesta inicial
-        console.log('🎯 [useNovaAudio] Already connected, creating initial response...')
-        gpt4oClient.current.createResponse()
       }
+      
+      // Iniciar grabación de audio
+      console.log('🎤 [useNovaAudio] Starting audio recording...')
+      await gpt4oClient.current.startRecording()
+      setIsRecording(true)
       
       setIsRecording(true)
       setConversationActive(true)
@@ -113,21 +114,27 @@ const useNovaAudio = () => {
   /**
    * Detener sesión de voz
    */
-  const stopVoiceSession = useCallback(() => {
+  const stopVoiceSession = useCallback(async () => {
     try {
-      console.log('🛑 [useNovaAudio] Stopping GPT-4o voice session...')
+      console.log('🛑 [useNovaAudio] Stopping audio recording and processing...')
+      
+      if (gpt4oClient.current && isRecording) {
+        // Detener grabación y enviar audio a Azure OpenAI
+        await gpt4oClient.current.stopRecording()
+      }
       
       setIsRecording(false)
+      setIsProcessing(true) // Mostrar que se está procesando
       
-      // GPT-4o maneja automáticamente la detección de fin de voz
-      // No necesitamos hacer nada especial aquí
-      console.log('✅ [useNovaAudio] GPT-4o voice session stopped')
+      console.log('✅ [useNovaAudio] Audio sent to Azure OpenAI for processing')
 
     } catch (error) {
       console.error('❌ [useNovaAudio] Failed to stop voice session:', error)
       setError(error.message)
+      setIsRecording(false)
+      setIsProcessing(false)
     }
-  }, [])
+  }, [isRecording])
 
   /**
    * Handler: conexión establecida con GPT-4o
