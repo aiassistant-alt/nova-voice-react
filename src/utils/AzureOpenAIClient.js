@@ -19,7 +19,7 @@ class AzureOpenAIClient {
     // ✅ CONFIGURACIÓN AZURE OPENAI - HTTP REST API
     this.RESOURCE_NAME = "aiass-mf33a6qd-eastus2.cognitiveservices.azure.com"
     this.DEPLOYMENT = "gpt-4o-audio-preview-2"
-    this.API_VERSION = "2024-12-01-preview"
+    this.API_VERSION = "2024-10-21"
     this.API_KEY = import.meta.env.VITE_AZURE_OPENAI_API_KEY || "YOUR_API_KEY_HERE"
     
     // Endpoint para Chat Completions con audio
@@ -75,11 +75,12 @@ class AzureOpenAIClient {
           messages: [
             {
               role: "user",
-              content: "Test"
+              content: "Hi"
             }
           ],
           max_tokens: 5,
-          temperature: 0.1
+          temperature: 0.1,
+          stream: false
         })
       })
 
